@@ -372,6 +372,7 @@ function forum_setcookie($name, $value, $expire)
 
 	// Enable sending of a P3P header
 	header('P3P: CP="CUR ADM"');
+	header('Cache-Control: private', false); /* MODIF RL : http://fluxbb.org/forums/viewtopic.php?pid=61498#p61498 */
 
 	if (version_compare(PHP_VERSION, '5.2.0', '>='))
 		setcookie($name, $value, $expire, $cookie_path, $cookie_domain, $cookie_secure, true);
@@ -1393,7 +1394,13 @@ function maintenance_message()
 
 ?>
 <title><?php echo generate_page_title($page_title) ?></title>
-<link rel="stylesheet" type="text/css" href="style/<?php echo $pun_user['style'].'.css' ?>" />
+<?php
+// MODIF RL
+// OPITUX
+// GESTION DES THEMES, DE LA VERSION ET DU SWITCH CSS
+?>
+<link rel="stylesheet" type="text/css" href="<?php echo path_to_forum.'style/Global/global.css?version=' . current_theme . '' ?>" />
+<link rel="stylesheet" type="text/css" href="<?php echo path_to_forum.'style/'.RLStyle($pun_user['style']).'.css?version=' . current_theme . '' ?>" id="MyCss" />
 <?php
 
 	$tpl_temp = trim(ob_get_contents());
@@ -1519,8 +1526,20 @@ function redirect($destination_url, $message)
 ?>
 <meta http-equiv="refresh" content="<?php echo $pun_config['o_redirect_delay'] ?>;URL=<?php echo $destination_url ?>" />
 <title><?php echo generate_page_title($page_title) ?></title>
-<link rel="stylesheet" type="text/css" href="style/<?php echo $pun_user['style'].'.css' ?>" />
 <?php
+// MODIF RL
+// OPITUX
+// GESTION DES THEMES, DE LA VERSION ET DU SWITCH CSS
+?>
+<link rel="stylesheet" type="text/css" href="<?php echo 'style/Global/global.css?version=' . current_theme . '' ?>" />
+<link rel="stylesheet" type="text/css" href="style/<?php echo RLStyle($pun_user['style']).'.css?version=' . current_theme . '' ?>" id="MyCss" />
+
+<?php
+	// MODIF RL
+	// OPITUX
+	// RESET SWITCH COOKIE IF MODIFIED IN PROFILE.PHP
+	if (isset($_POST['form']['style']))
+		setcookie("RLFavoriteCss", "", time() - 3600, '/');
 
 	$tpl_temp = trim(ob_get_contents());
 	$tpl_redir = str_replace('<pun_head>', $tpl_temp, $tpl_redir);

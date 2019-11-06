@@ -62,7 +62,13 @@ if (isset($_POST['form_sent']))
 	// If it's a topic it must contain a subject
 	if ($can_edit_subject)
 	{
-		$subject = pun_trim($_POST['req_subject']);
+//********************* Modif : Tags
+//********************* Ancienne ligne : $subject = pun_trim($_POST['req_subject']);
+        if ($_POST['tag1'] != '' && $_POST['tag2'] != '' && preg_match("(\[(.+?)\])", $_POST['req_subject']) != 0)
+            $subject = pun_trim($_POST['tag1'].' '.$_POST['tag2'].' '.preg_replace('(\[(.+?)\])', '', $_POST['req_subject']));
+        else
+            $subject = pun_trim($_POST['tag1'].' '.$_POST['tag2'].' '.$_POST['req_subject']);
+//********************* Fin Modif
 
 		if ($pun_config['o_censoring'] == '1')
 			$censored_subject = pun_trim(censor_words($subject));
@@ -225,10 +231,45 @@ else if (isset($_POST['preview']))
 					<legend><?php echo $lang_post['Edit post legend'] ?></legend>
 					<input type="hidden" name="form_sent" value="1" />
 					<div class="infldset txtarea">
-<?php if ($can_edit_subject): ?>						<label class="required"><strong><?php echo $lang_common['Subject'] ?> <span><?php echo $lang_common['Required'] ?></span></strong><br />
-						<input class="longinput" type="text" name="req_subject" size="80" maxlength="70" tabindex="<?php echo $cur_index++ ?>" value="<?php echo pun_htmlspecialchars(isset($_POST['req_subject']) ? $_POST['req_subject'] : $cur_post['subject']) ?>" /><br /></label>
+<?php if ($can_edit_subject): ?>
+<!--********************* Modif : Tags -->
+<?php
+require_once('./include/tags.php');
+$tag = new tagManager($cur_post['subject'],$_POST['tag1'],$_POST['tag2'],$cur_post['fid']);
+$subject = $tag->getSubject(false);
+?>
+                        <label class="required"><strong><?php echo $lang_common['Subject'] ?> <span><?php echo $lang_common['Required'] ?></span></strong><br />
+                        <input class="longinput" type="text" name="req_subject" size="80" maxlength="70" tabindex="<?php echo $cur_index++ ?>" value="<?php echo pun_htmlspecialchars($subject) ?>" /><br /></label>
+<!--********************* Fin Modif -->
 <?php endif; ?>						<label class="required"><strong><?php echo $lang_common['Message'] ?> <span><?php echo $lang_common['Required'] ?></span></strong><br />
-						<textarea name="req_message" rows="20" cols="95" tabindex="<?php echo $cur_index++ ?>"><?php echo pun_htmlspecialchars(isset($_POST['req_message']) ? $message : $cur_post['message']) ?></textarea><br /></label>
+						<textarea name="req_message" rows="20" cols="95" tabindex="<?php echo $cur_index++ ?>"><?php echo pun_htmlspecialchars(isset($_POST['req_message']) ? $message : $cur_post['message']) ?></textarea>
+						<?php
+						// Modifs OPITUX pour adapter la hauteur du textarea quand virtual keyboard déployé sur mobile
+						?>
+						<div id="result" style="display:none"></div>
+						<script>
+						function displayWindowSize(){
+
+							var w = document.documentElement.clientWidth;
+							var h = document.documentElement.clientHeight;
+							var inputVal = document.getElementById('edit').elements['req_message'];
+
+							document.getElementById("result").innerHTML = "Width: " + w + ", " + "Height: " + h;
+							inputVal.style.maxHeight = h - 30  + 'px';
+							if ( w < 1024 && document.getElementById('header') !=null ) {
+								document.getElementById('header').remove();
+								document.getElementById('content').style.marginTop = "0";
+							}
+
+						}
+						window.addEventListener("resize", displayWindowSize);
+						displayWindowSize();
+
+						</script>
+						<?php
+						// END Modifs
+						?>
+						<br /></label>
 						<ul class="bblinks">
 							<li><span><a href="help.php#bbcode" onclick="window.open(this.href); return false;"><?php echo $lang_common['BBCode'] ?></a> <?php echo ($pun_config['p_message_bbcode'] == '1') ? $lang_common['on'] : $lang_common['off']; ?></span></li>
 							<li><span><a href="help.php#url" onclick="window.open(this.href); return false;"><?php echo $lang_common['url tag'] ?></a> <?php echo ($pun_config['p_message_bbcode'] == '1' && $pun_user['g_post_links'] == '1') ? $lang_common['on'] : $lang_common['off']; ?></span></li>

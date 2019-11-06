@@ -58,10 +58,10 @@ foreach ($pun_includes as $cur_include)
 	ob_start();
 
 	$file_info = pathinfo($cur_include[1]);
-	
+
 	if (!in_array($file_info['extension'], array('php', 'php4', 'php5', 'inc', 'html', 'txt'))) // Allow some extensions
 		error(sprintf($lang_common['Pun include extension'], pun_htmlspecialchars($cur_include[0]), basename($tpl_file), pun_htmlspecialchars($file_info['extension'])));
-		
+
 	if (strpos($file_info['dirname'], '..') !== false) // Don't allow directory traversal
 		error(sprintf($lang_common['Pun include directory'], pun_htmlspecialchars($cur_include[0]), basename($tpl_file)));
 
@@ -102,8 +102,17 @@ if (!defined('PUN_ALLOW_INDEX'))
 
 ?>
 <title><?php echo generate_page_title($page_title, $p) ?></title>
-<link rel="stylesheet" type="text/css" href="style/<?php echo $pun_user['style'].'.css' ?>" />
+<?php require PUN_ROOT.'plugins/ezbbc/ezbbc_head.php'; ?>
 <?php
+// MODIF RL
+// OPITUX
+// GESTION DES THEMES, DE LA VERSION ET DU SWITCH CSS
+?>
+<link rel="stylesheet" type="text/css" href="style/Global/global.css?version=<?php echo current_theme ?>" />
+<link rel="stylesheet" type="text/css" href="style/<?php echo RLStyle($pun_user['style']).'.css?version=' . current_theme . '' ?>" id="MyCss" />
+<?php
+GetRLStyle();
+// END MODIF RL
 
 if (defined('PUN_ADMIN_CONSOLE'))
 {
@@ -250,8 +259,15 @@ else
 		{
 			$result_header = $db->query('SELECT 1 FROM '.$db->prefix.'reports WHERE zapped IS NULL') or error('Unable to fetch reports info', __FILE__, __LINE__, $db->error());
 
-			if ($db->result($result_header))
-				$page_statusinfo[] = '<li class="reportlink"><span><strong><a href="admin_reports.php">'.$lang_common['New reports'].'</a></strong></span></li>';
+			// MODIF RL
+			// OPITUX
+			if ($db->result($result_header)) {
+			$reponse = $db->query('SELECT created FROM '.$db->prefix.'reports WHERE zapped IS NULL ORDER BY created DESC');
+			$num_report = $db->num_rows($reponse);
+			$data = mysqli_fetch_array($reponse);
+				$page_statusinfo[] = '<li class="reportlink"><span><strong><a href="admin_reports.php">'.$num_report.' '.$lang_common['New reports'].' - dernier le '.strftime('%d/%m', $data['created']).'</a></strong></span></li>';
+			}
+			// END MODIF
 		}
 
 		if ($pun_config['o_maintenance'] == '1')

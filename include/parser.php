@@ -39,25 +39,7 @@ if (!defined('PUN'))
 $re_list = '%\[list(?:=([1a*]))?+\]((?:[^\[]*+(?:(?!\[list(?:=[1a*])?+\]|\[/list\])\[[^\[]*+)*+|(?R))*)\[/list\]%i';
 
 // Here you can add additional smilies if you like (please note that you must escape single quote and backslash)
-$smilies = array(
-	':)' => 'smile.png',
-	'=)' => 'smile.png',
-	':|' => 'neutral.png',
-	'=|' => 'neutral.png',
-	':(' => 'sad.png',
-	'=(' => 'sad.png',
-	':D' => 'big_smile.png',
-	'=D' => 'big_smile.png',
-	':o' => 'yikes.png',
-	':O' => 'yikes.png',
-	';)' => 'wink.png',
-	':/' => 'hmm.png',
-	':P' => 'tongue.png',
-	':p' => 'tongue.png',
-	':lol:' => 'lol.png',
-	':mad:' => 'mad.png',
-	':rolleyes:' => 'roll.png',
-	':cool:' => 'cool.png');
+require PUN_ROOT.'plugins/ezbbc/ezbbc_smilies1.php';
 
 //
 // Make sure all BBCodes are lower case and do a little cleanup
@@ -160,7 +142,10 @@ function strip_empty_bbcode($text)
 		list($inside, $text) = extract_blocks($text, '[code]', '[/code]');
 
 	// Remove empty tags
-	while (!is_null($new_text = preg_replace('%\[(b|u|s|ins|del|em|i|h|colou?r|quote|img|url|email|list|topic|post|forum|user)(?:\=[^\]]*)?\]\s*\[/\1\]%', '', $text)))
+//********************* Modif : Tableaux
+//********************* Ancienne ligne : 	while (!is_null($new_text = preg_replace('%\[(b|video|u|s|ins|del|em|i|h|colou?r|quote|img|url|email|list|topic|post|forum|user)(?:\=[^\]]*)?\]\s*\[/\1\]%', '', $text)))
+	while (!is_null($new_text = preg_replace('%\[(b|video|u|s|ins|del|em|i|h|colou?r|quote|rltable|img|url|email|list|topic|post|forum|user)(?:\=[^\]]*)?\]\s*\[/\1\]%', '', $text)))
+//********************* Modif :
 	{
 		if ($new_text != $text)
 			$text = $new_text;
@@ -204,8 +189,11 @@ function preparse_tags($text, &$errors, $is_signature = false)
 	// Start off by making some arrays of bbcode tags and what we need to do with each one
 
 	// List of all the tags
-	$tags = array('quote', 'code', 'b', 'i', 'u', 's', 'ins', 'del', 'em', 'color', 'colour', 'url', 'email', 'img', 'list', '*', 'h', 'topic', 'post', 'forum', 'user');
-	// List of tags that we need to check are open (You could not put b,i,u in here then illegal nesting like [b][i][/b][/i] would be allowed)
+//********************* Modif : Tableaux
+//********************* Ancienne ligne : $tags = array('quote', 'video', 'code', 'b', 'i', 'u', 's', 'ins', 'del', 'em', 'color', 'colour', 'url', 'email', 'img', 'list', '*', 'h', 'topic', 'post', 'forum', 'user');
+	$tags = array('quote', 'video', 'code', 'b', 'i', 'u', 's', 'ins', 'del', 'em', 'color', 'colour', 'url', 'email', 'img', 'list', '*', 'h', 'topic', 'post', 'forum', 'user', 'rltable');
+//********************* Fin Modif
+    // List of tags that we need to check are open (You could not put b,i,u in here then illegal nesting like [b][i][/b][/i] would be allowed)
 	$tags_opened = $tags;
 	// and tags we need to check are closed (the same as above, added it just in case)
 	$tags_closed = $tags;
@@ -216,13 +204,16 @@ function preparse_tags($text, &$errors, $is_signature = false)
 	// Tags not allowed
 	$tags_forbidden = array();
 	// Block tags, block tags can only go within another block tag, they cannot be in a normal tag
-	$tags_block = array('quote', 'code', 'list', 'h', '*');
+//********************* Modif : Tableaux
+//********************* Ancienne ligne : $tags_block = array('quote', 'code', 'list', 'h', '*');
+	$tags_block = array('quote', 'code', 'list', 'h', '*', 'rltable');
+//********************* Fin Modif
 	// Inline tags, we do not allow new lines in these
-	$tags_inline = array('b', 'i', 'u', 's', 'ins', 'del', 'em', 'color', 'colour', 'h', 'topic', 'post', 'forum', 'user');
+	$tags_inline = array('b', 'video', 'i', 'u', 's', 'ins', 'del', 'em', 'color', 'colour', 'h', 'topic', 'post', 'forum', 'user');
 	// Tags we trim interior space
-	$tags_trim = array('img');
+	$tags_trim = array('img', 'video');
 	// Tags we remove quotes from the argument
-	$tags_quotes = array('url', 'email', 'img', 'topic', 'post', 'forum', 'user');
+	$tags_quotes = array('url', 'video', 'email', 'img', 'topic', 'post', 'forum', 'user');
 	// Tags we limit bbcode in
 	$tags_limit_bbcode = array(
 		'*' 	=> array('b', 'i', 'u', 's', 'ins', 'del', 'em', 'color', 'colour', 'url', 'email', 'list', 'img', 'code', 'topic', 'post', 'forum', 'user'),
@@ -234,6 +225,10 @@ function preparse_tags($text, &$errors, $is_signature = false)
 		'forum' => array('img'),
 		'user'  => array('img'),
 		'img' 	=> array(),
+		'video' => array('url'),
+//********************* Modif : Tableaux
+        'rltable' => array('b','i','u','s', 'url'),
+//********************* Fin Modif
 		'h'		=> array('b', 'i', 'u', 's', 'ins', 'del', 'em', 'color', 'colour', 'url', 'email', 'topic', 'post', 'forum', 'user'),
 	);
 	// Tags we can automatically fix bad nesting
@@ -243,7 +238,11 @@ function preparse_tags($text, &$errors, $is_signature = false)
 	if ($pun_user['g_post_links'] != '1')
 		$tags_forbidden[] = 'url';
 
-	$split_text = preg_split('%(\[[\*a-zA-Z0-9-/]*?(?:=.*?)?\])%', $text, -1, PREG_SPLIT_DELIM_CAPTURE|PREG_SPLIT_NO_EMPTY);
+		// Modifs OPITUX pour lien lien citation vers message original
+		$text = str_replace("[quote post", "[quote= post", $text);
+		// END Modifs
+
+		$split_text = preg_split('%(\[[\*a-zA-Z0-9-/]*?(?:=.*?)?\])%', $text, -1, PREG_SPLIT_DELIM_CAPTURE|PREG_SPLIT_NO_EMPTY);
 
 	$open_tags = array('fluxbb-bbcode');
 	$open_args = array('');
@@ -704,7 +703,7 @@ function handle_url_tag($url, $link = '', $bbcode = false)
 //
 // Turns an URL from the [img] tag into an <img> tag or a <a href...> tag
 //
-function handle_img_tag($url, $is_signature = false, $alt = null)
+function handle_img_tag($url, $is_signature = false, $alt = null, $width = null, $height = null )
 {
 	global $lang_common, $pun_user;
 
@@ -713,10 +712,13 @@ function handle_img_tag($url, $is_signature = false, $alt = null)
 
 	$img_tag = '<a href="'.$url.'" rel="nofollow">&lt;'.$lang_common['Image link'].' - '.$alt.'&gt;</a>';
 
+	// MODIF OPITUX
+	// UTILISATION DES WIDTH & HEIGHT DES IMAGES ENREGISTRÉES DANS FOTOO + LAZY NATIF
 	if ($is_signature && $pun_user['show_img_sig'] != '0')
 		$img_tag = '<img class="sigimage" src="'.$url.'" alt="'.$alt.'" />';
 	else if (!$is_signature && $pun_user['show_img'] != '0')
-		$img_tag = '<span class="postimg"><img src="'.$url.'" alt="'.$alt.'" /></span>';
+		$img_tag = '<span class="postimg"><img src="'.$url.'" loading="lazy" alt="'.$alt.'" width="'.$width.'" height="'.$height.'" /></span>';
+	// END MODIF
 
 	return $img_tag;
 }
@@ -750,6 +752,36 @@ function handle_list_tag($content, $type = '*')
 	return '</p>'.$content.'<p>';
 }
 
+//********************* Modif : Tableaux
+//********************* Fonction de traitement pour les tableaux
+function handle_rltable($colspec, $content){
+  $align = array("l" => "left", "c" => "center", "r" => "right");
+  $columns=str_split($colspec);
+  $width=count($columns);
+  $lines=explode("\n", $content);
+  $output="<table class='rl-table'>";
+  foreach ($lines as $l_i => $line) {
+    $header=false;
+    $l = trim($line);
+    if (substr($l, 0, 1) == "^") { // on teste si c'est un header
+      $header=true;
+      $l = trim(substr($l, 1));
+      $output .= "<tr class='header'>"; }
+    else { $output .= "<tr>"; }
+    $cells = explode("|", $l);
+    if ($l == "")
+      $output .= "<td class='blank-cell' colspan='" . $width . "'>&nbsp;</td>";
+    else if (count($cells) !== $width) // ligne spéciale, on fait une cellule unique
+      $output .= "<td class='mono-cell' colspan='" . $width . "'>" . $l . "</td>";
+    else  // ligne normale, on transforme en cellules
+      foreach ($cells as $c_i => $cell)
+    $output .= "<td style='text-align:" . $align[$columns[$c_i]] . ";'>" . trim($cell) . '</td>';
+    $output .= "</tr>";
+  }
+  $output .= "</table>";
+  return $output;
+}
+//********************* Fin Modif
 
 //
 // Convert BBCodes to their HTML equivalent
@@ -760,6 +792,12 @@ function do_bbcode($text, $is_signature = false)
 
 	if (strpos($text, '[quote') !== false)
 	{
+		// Modifs OPITUX pour lien lien citation vers message original
+		$text = preg_replace_callback('%\[quote= post=([0-9]+)\\]%s',create_function('$matches','return "[quote]<span class=\"quoted-origin\"><a href=\"viewtopic.php?pid=".$matches[1]."#p".$matches[1]."\" title=\"Lien vers le message cité\">#".$matches[1]."</a></span><!--.quoted-->";'),$text);
+		$text = preg_replace_callback('%\[quote=(&quot;|&\#039;|"|\'|)([^\r\n]*?) post=([0-9]+)\\1\]%s',create_function('$matches','return "[quote=".$matches[1].$matches[2]."]<span class=\"quoted-origin\"><a href=\"viewtopic.php?pid=".$matches[3]."#p".$matches[3]."\" title=\"Lien vers le message cité\">#".$matches[3]."</a></span><!--.quoted-->";'),$text);
+		$text = str_replace("<!--.quoted-->\n", "", $text);
+		// END Modifs
+
 		$text = preg_replace('%\[quote\]\s*%', '</p><div class="quotebox"><blockquote><div><p>', $text);
 		$text = preg_replace_callback('%\[quote=(&quot;|&\#039;|"|\'|)([^\r\n]*?)\\1\]%s', create_function('$matches', 'global $lang_common; return "</p><div class=\"quotebox\"><cite>".str_replace(array(\'[\', \'\\"\'), array(\'&#91;\', \'"\'), $matches[2])." ".$lang_common[\'wrote\']."</cite><blockquote><div><p>";'), $text);
 		$text = preg_replace('%\s*\[\/quote\]%S', '</p></div></blockquote></div><p>', $text);
@@ -779,6 +817,7 @@ function do_bbcode($text, $is_signature = false)
 	$pattern[] = '%\[em\](.*?)\[/em\]%ms';
 	$pattern[] = '%\[colou?r=([a-zA-Z]{3,20}|\#[0-9a-fA-F]{6}|\#[0-9a-fA-F]{3})](.*?)\[/colou?r\]%ms';
 	$pattern[] = '%\[h\](.*?)\[/h\]%ms';
+	require PUN_ROOT.'plugins/ezbbc/ezbbc_video_pattern.php';
 
 	$replace[] = '<strong>$1</strong>';
 	$replace[] = '<em>$1</em>';
@@ -789,22 +828,34 @@ function do_bbcode($text, $is_signature = false)
 	$replace[] = '<em>$1</em>';
 	$replace[] = '<span style="color: $1">$2</span>';
 	$replace[] = '</p><h5>$1</h5><p>';
+	require PUN_ROOT.'plugins/ezbbc/ezbbc_video_replace.php';
 
+	// MODIF OPITUX
+	// UTILISATION DES WIDTH & HEIGHT DES IMAGES ENREGISTRÉES DANS FOTOO
 	if (($is_signature && $pun_config['p_sig_img_tag'] == '1') || (!$is_signature && $pun_config['p_message_img_tag'] == '1'))
 	{
 		$pattern_callback[] = '%\[img\]((ht|f)tps?://)([^\s<"]*?)\[/img\]%';
+		$pattern_callback[] = '%\[img=([0-9]+),([0-9]+)\]((ht|f)tps?://)([^\s<"]*?)\[/img\]%';
 		$pattern_callback[] = '%\[img=([^\[]*?)\]((ht|f)tps?://)([^\s<"]*?)\[/img\]%';
 		if ($is_signature)
 		{
 			$replace_callback[] = 'handle_img_tag($matches[1].$matches[3], true)';
+			$replace_callback[] = 'handle_img_tag($matches[3].$matches[5], true, null, $matches[1], $matches[2])';
 			$replace_callback[] = 'handle_img_tag($matches[2].$matches[4], true, $matches[1])';
 		}
 		else
 		{
 			$replace_callback[] = 'handle_img_tag($matches[1].$matches[3], false)';
+			$replace_callback[] = 'handle_img_tag($matches[3].$matches[5], false, null, $matches[1], $matches[2])';
 			$replace_callback[] = 'handle_img_tag($matches[2].$matches[4], false, $matches[1])';
 		}
 	}
+	// END MODIF OPITUX
+
+//********************* Modif : Tableaux
+    $pattern_callback[] = '%\[rltable=([lcr]+)\]\n(.*?)\n\[/rltable\]%ms';
+    $replace_callback[] = 'handle_rltable($matches[1], $matches[2])';
+//********************* Fin Modif :
 
 	$pattern_callback[] = '%\[url\]([^\[]*?)\[/url\]%';
 	$pattern_callback[] = '%\[url=([^\[]+?)\](.*?)\[/url\]%';
@@ -839,6 +890,19 @@ function do_bbcode($text, $is_signature = false)
 	{
 		$text = preg_replace_callback($pattern_callback[$i], create_function('$matches', 'return '.$replace_callback[$i].';'), $text);
 	}
+
+	// MODIF RL OPITUX
+	// RGPD VIDEO CONSENT
+	// REMPLACEMENT DES VIGNETTES VIMEO DONT L'ID DU THUMBNAIL EST DIFFERENT DE L'ID VIDEO
+
+	$SearchVimeoImgId = preg_match_all('#https://i.vimeocdn.com/video/(?:[a-z]*/)*([0-9]{6,11})[?]?.*#', $text, $VimeoImgId);
+	foreach ($VimeoImgId[1] as $id){
+		$arr_vimeo = unserialize(file_get_contents("https://vimeo.com/api/v2/video/$id.php"));
+		$text = str_replace('https://i.vimeocdn.com/video/' . $id, 'https://reho.st/' . $arr_vimeo[0]['thumbnail_large'], $text);
+	}
+
+	// END RL OPITUX
+
 	return $text;
 }
 
@@ -877,7 +941,7 @@ function do_smilies($text)
 	foreach ($smilies as $smiley_text => $smiley_img)
 	{
 		if (strpos($text, $smiley_text) !== false)
-			$text = ucp_preg_replace('%(?<=[>\s])'.preg_quote($smiley_text, '%').'(?=[^\p{L}\p{N}])%um', '<img src="'.pun_htmlspecialchars(get_base_url(true).'/img/smilies/'.$smiley_img).'" width="15" height="15" alt="'.substr($smiley_img, 0, strrpos($smiley_img, '.')).'" />', $text);
+			require PUN_ROOT.'plugins/ezbbc/ezbbc_smilies2.php';
 	}
 
 	return substr($text, 1, -1);
@@ -923,7 +987,7 @@ function parse_message($text, $hide_smilies)
 			if (isset($inside[$i]))
 			{
 				$num_lines = (substr_count($inside[$i], "\n"));
-				$text .= '</p><div class="codebox"><pre'.(($num_lines > 28) ? ' class="vscroll"' : '').'><code>'.pun_trim($inside[$i], "\n\r").'</code></pre></div><p>';
+				require PUN_ROOT.'plugins/ezbbc/ezbbc_code_highlight.php';
 			}
 		}
 	}
