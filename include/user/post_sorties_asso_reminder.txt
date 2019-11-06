@@ -1,0 +1,4 @@
+<p>
+	<b>Rappel</b><br />
+	Les participants à une sorti asso doivent être <a href="https://www.randonner-leger.org/association/" target="_blank">adhérent de l'association Randonner-Leger</a> et à jour de cotisation pour l'année en cours.<br />
+</p>
